@@ -2,10 +2,6 @@
 
 #include <iostream>
 
-// vertex to represent a point
-float point[3] = { 0.0f, 0.0f,  0.0f };
-unsigned int VBOPoint, VAOPoint;
-
 int main(void)
 {
     // GLFW Init & Config
@@ -44,8 +40,6 @@ int main(void)
         return -1;
     }
 
-    Shader* pointShaderProgram = new Shader("shader/VertexTest.vs", "shader/FragmentTest.frag");
-
     // to enable the changing of the point size when rendering using GL_POINTS
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_DEPTH_TEST);
@@ -54,7 +48,7 @@ int main(void)
     mCamera.Position = glm::vec3(0, 0, 6);
     mHeight = 0;
 
-    SetupMaterials();
+    SetupShaders();
     SetupArraysAndBuffers();
 
     // Loop until the user closes the window
@@ -75,7 +69,7 @@ int main(void)
 /// </summary>
 
 // setup shaders and materials
-void SetupMaterials()
+void SetupShaders()
 {
     mShader = new Shader("shader/Vertex.vs",/* "shder/Geometry.gs",*/ "shader/Fragment.frag");
     
