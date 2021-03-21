@@ -28,6 +28,7 @@ int main(void)
     glfwSetFramebufferSizeCallback(mWindow, FramebufferSizeCallback);
     glfwSetCursorPosCallback(mWindow, MouseCallback);
     glfwSetScrollCallback(mWindow, ScrollCallback);
+    glfwSetKeyCallback(mWindow, KeyCallback);
 
     // Capture mouse
     glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -43,9 +44,8 @@ int main(void)
     // to enable the changing of the point size when rendering using GL_POINTS
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_MULTISAMPLE);
 
-    mCamera.Position = glm::vec3(0, 0, 6);
+    mCamera.Position = glm::vec3(0, 0, -10);
     mHeight = 0;
 
     SetupShaders();
@@ -71,7 +71,7 @@ int main(void)
 // setup shaders and materials
 void SetupShaders()
 {
-    mShader = new Shader("shader/Vertex.vs",/* "shder/Geometry.gs",*/ "shader/Fragment.frag");
+    mShader = new Shader("shader/Vertex.vs", "shader/Fragment.frag", "shader/Geometry.gs");
     
     mNoiseShader = new Shader("shader/Noise.vs", "shader/Noise.frag");
 }
@@ -151,7 +151,6 @@ void RenderScene()
     mNoiseShader->use();
     glBindFramebuffer(GL_FRAMEBUFFER, mFbo);
     glClear(GL_COLOR_BUFFER_BIT);
-    glClear(GL_DEPTH_BUFFER_BIT);
     mNoiseShader->setFloat("height", mHeight);
     for (int i = 0; i < TERRAIN_DEPTH; i++)
     {
@@ -165,25 +164,22 @@ void RenderScene()
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-    //glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     mShader->use();
     glm::mat4 projection = glm::perspective(glm::radians(mCamera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.0f, 1000.0f);
     glm::mat4 view = mCamera.GetViewMatrix();
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(0.1f, 0.1f, 0.1f));
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
     mShader->setMat4("proj", projection);
     mShader->setMat4("view", view);
-    mShader->setMat4("model", modelMatrix);
-    //mShader->setInt("uWidth", TERRAIN_WIDTH);
-    //mShader->setInt("uHeight", TERRAIN_HEIGHT);
-    //mShader->setInt("uDepth", TERRAIN_DEPTH);
-    ///*if (mWireframe)
-    //{
-    //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    //}*/
+    mShader->setMat4("model", model);
+    
+    if (mShowWireFrame)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
 
     glBindVertexArray(mEmptyVao);
     glDrawArrays(GL_POINTS, 0, TERRAIN_WIDTH * TERRAIN_HEIGHT * TERRAIN_DEPTH);
@@ -262,6 +258,14 @@ void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     mCamera.ProcessMouseScroll(static_cast<float>(yoffset));
+}
+
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (action == GLFW_PRESS && key == GLFW_KEY_P)
+    {
+        mShowWireFrame = !mShowWireFrame;
+    }
 }
 
 /// <summary>

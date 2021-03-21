@@ -5,6 +5,7 @@ layout (triangle_strip, max_vertices = 12) out;
 
 uniform mat4 proj;
 uniform mat4 view;
+uniform mat4 model;
 
 in vec3 varTexture[];
 in int varIndex[];
@@ -187,7 +188,7 @@ void main(void) {
     int index = varIndex[0] * 12;
     for(int i = 0; i < 12; i += 3) {
         for(int k = 0; k < 3; k++) {
-            gl_Position = proj * view * (base + vec4(vectors[table[index + i + k]], 0.0));
+            gl_Position = model * proj * view * (base + vec4(vectors[table[index + i + k]], 0.0));
             varTextureG = varTexture[0];
             EmitVertex();
         }

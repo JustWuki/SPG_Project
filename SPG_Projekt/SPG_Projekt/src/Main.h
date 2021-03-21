@@ -13,6 +13,7 @@
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xpos, double ypos);
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void ProcessInput(GLFWwindow* window);
 
@@ -27,19 +28,18 @@ void OnExit();
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
 
-const unsigned int TERRAIN_WIDTH =  96;
-const unsigned int TERRAIN_HEIGHT = 256;
-const unsigned int TERRAIN_DEPTH = 96;
+const unsigned int TERRAIN_WIDTH =  64;
+const unsigned int TERRAIN_HEIGHT = 64;
+const unsigned int TERRAIN_DEPTH = 64;
 
 Camera mCamera;
 double mLastX = SCR_WIDTH / 2.0;
 double mLastY = SCR_HEIGHT / 2.0;
 bool mFirstMouse;
 
+GLFWwindow* mWindow;
 double mDeltaTime;
 double mLastFrameTime;
-
-GLFWwindow* mWindow;
 
 // shaders
 Shader* mNoiseShader;
@@ -57,3 +57,5 @@ unsigned int mEmptyVbo;
 float mHeight;
 
 float mVerticesTerrain[6][2] = { {-1.0f, -1.0f}, {-1.0, 1.0}, {1.0, -1.0}, {1.0f, 1.0f}, {-1.0, 1.0}, {1.0, -1.0} };
+
+float mShowWireFrame = false;
