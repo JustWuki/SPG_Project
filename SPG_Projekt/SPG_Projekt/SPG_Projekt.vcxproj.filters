@@ -29,5 +29,18 @@
     <ClInclude Include="src\Main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Utils\Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\Vertex.vs" />
+    <None Include="shader\Geometry.gs" />
+    <None Include="shader\Fragment.frag" />
+    <None Include="shader\Noise.frag" />
+    <None Include="shader\Noise.vs" />
   </ItemGroup>
 </Project>

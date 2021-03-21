@@ -156,6 +156,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Main.h" />
+    <ClInclude Include="src\Utils\Camera.h" />
+    <ClInclude Include="src\Utils\Shader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shader\Fragment.frag" />
+    <None Include="shader\Geometry.gs" />
+    <None Include="shader\Vertex.vs" />
+    <None Include="shader\Noise.frag" />
+    <None Include="shader\Noise.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
