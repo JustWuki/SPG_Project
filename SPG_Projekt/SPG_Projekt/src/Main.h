@@ -10,6 +10,8 @@
 
 #include "Utils/Camera.h"
 #include "Utils/Shader.h"
+#include "Utils/TextureLoader.h"
+#include "Utils/HelperObjects.h"
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xpos, double ypos);
@@ -20,6 +22,7 @@ void ProcessInput(GLFWwindow* window);
 void RenderLoop();
 void DrawErrors();
 void SetupShaders();
+void SetupTextures();
 void SetupArraysAndBuffers();
 void RenderLoop();
 void RenderScene();
@@ -44,6 +47,12 @@ double mLastFrameTime;
 // shaders
 Shader* mNoiseShader;
 Shader* mShader;
+Shader* mParallaxShader;
+
+// Textures
+unsigned int diffuseMap;
+unsigned int normalMap;
+unsigned int heightMap;
 
 unsigned int mFbo;
 unsigned int mFboTex;
@@ -55,7 +64,14 @@ unsigned int mEmptyVao;
 unsigned int mEmptyVbo;
 
 float mHeight;
+int mNormalSteps = 10;
+int mRefinementSteps = 5;
 
 float mVerticesTerrain[6][2] = { {-1.0f, -1.0f}, {-1.0, 1.0}, {1.0, -1.0}, {1.0f, 1.0f}, {-1.0, 1.0}, {1.0, -1.0} };
 
 float mShowWireFrame = false;
+
+float heightScale = 0.1;
+// lighting info
+glm::vec3 lightPos(-5.0f, 1.0f, 0.3f);
+glm::vec3 startPos(-5.0f, 0.0f, 0.0f);

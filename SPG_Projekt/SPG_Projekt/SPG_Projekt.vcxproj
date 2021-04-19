@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -153,18 +153,29 @@
   <ItemGroup>
     <ClCompile Include="..\Dependencies\src\glad.c" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Utils\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Main.h" />
     <ClInclude Include="src\Utils\Camera.h" />
+    <ClInclude Include="src\Utils\HelperObjects.h" />
     <ClInclude Include="src\Utils\Shader.h" />
+    <ClInclude Include="src\Utils\stb_image.h" />
+    <ClInclude Include="src\Utils\TextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\Fragment.frag" />
     <None Include="shader\Geometry.gs" />
+    <None Include="shader\Parallax.frag" />
+    <None Include="shader\Parallax.vs" />
     <None Include="shader\Vertex.vs" />
     <None Include="shader\Noise.frag" />
     <None Include="shader\Noise.vs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resource\bricks.jpg" />
+    <Image Include="resource\bricks_disp.jpg" />
+    <Image Include="resource\bricks_normal.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
