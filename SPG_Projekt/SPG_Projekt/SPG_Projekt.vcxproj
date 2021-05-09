@@ -153,12 +153,21 @@
   <ItemGroup>
     <ClCompile Include="..\Dependencies\src\glad.c" />
     <ClCompile Include="src\Main.cpp" />
+    <ClCompile Include="src\Utils\Collision_Detection\KDTree.cpp" />
+    <ClCompile Include="src\Utils\Collision_Detection\Triangle.cpp" />
+    <ClCompile Include="src\Utils\Particles\ParticleSystem.cpp" />
     <ClCompile Include="src\Utils\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Main.h" />
     <ClInclude Include="src\Utils\Camera.h" />
+    <ClInclude Include="src\Utils\Collision_Detection\Box.h" />
+    <ClInclude Include="src\Utils\Collision_Detection\KDTree.h" />
+    <ClInclude Include="src\Utils\Collision_Detection\Node.h" />
+    <ClInclude Include="src\Utils\Collision_Detection\Triangle.h" />
     <ClInclude Include="src\Utils\HelperObjects.h" />
+    <ClInclude Include="src\Utils\Particles\Particle.h" />
+    <ClInclude Include="src\Utils\Particles\ParticleSystem.h" />
     <ClInclude Include="src\Utils\Shader.h" />
     <ClInclude Include="src\Utils\stb_image.h" />
     <ClInclude Include="src\Utils\TextureLoader.h" />
@@ -168,6 +177,13 @@
     <None Include="shader\Geometry.gs" />
     <None Include="shader\Parallax.frag" />
     <None Include="shader\Parallax.vs" />
+    <None Include="shader\ParticleRender.frag" />
+    <None Include="shader\ParticleRender.gs" />
+    <None Include="shader\ParticleRender.vs" />
+    <None Include="shader\ParticleUpdate.gs" />
+    <None Include="shader\ParticleUpdate.vs" />
+    <None Include="shader\SimpleColorFragmentShader.frag" />
+    <None Include="shader\SimpleVertexShader.vs" />
     <None Include="shader\Vertex.vs" />
     <None Include="shader\Noise.frag" />
     <None Include="shader\Noise.vs" />
@@ -176,6 +192,7 @@
     <Image Include="resource\bricks.jpg" />
     <Image Include="resource\bricks_disp.jpg" />
     <Image Include="resource\bricks_normal.jpg" />
+    <Image Include="resource\particle.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

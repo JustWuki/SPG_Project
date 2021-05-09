@@ -13,6 +13,7 @@ class Shader
 {
 public:
     unsigned int ID;
+
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
     Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr)
@@ -32,17 +33,22 @@ public:
         {
             // open files
             vShaderFile.open(vertexPath);
-            fShaderFile.open(fragmentPath);
-            std::stringstream vShaderStream, fShaderStream;
+            std::stringstream vShaderStream;
             // read file's buffer contents into streams
             vShaderStream << vShaderFile.rdbuf();
-            fShaderStream << fShaderFile.rdbuf();
             // close file handlers
             vShaderFile.close();
-            fShaderFile.close();
             // convert stream into string
             vertexCode = vShaderStream.str();
-            fragmentCode = fShaderStream.str();
+            if (fragmentPath != nullptr)
+            {
+                fShaderFile.open(fragmentPath);
+                std::stringstream fShaderStream;;
+                fShaderStream << fShaderFile.rdbuf();
+                fShaderFile.close();
+                fragmentCode = fShaderStream.str();
+            }
+
             // if geometry shader path is present, also load a geometry shader
             if (geometryPath != nullptr)
             {
@@ -67,10 +73,13 @@ public:
         glCompileShader(vertex);
         checkCompileErrors(vertex, "VERTEX");
         // fragment Shader
-        fragment = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragment, 1, &fShaderCode, NULL);
-        glCompileShader(fragment);
-        checkCompileErrors(fragment, "FRAGMENT");
+        if (fragmentPath != nullptr) 
+        {
+            fragment = glCreateShader(GL_FRAGMENT_SHADER);
+            glShaderSource(fragment, 1, &fShaderCode, NULL);
+            glCompileShader(fragment);
+            checkCompileErrors(fragment, "FRAGMENT");
+        }
         // if geometry shader is given, compile geometry shader
         unsigned int geometry;
         if (geometryPath != nullptr)
@@ -84,17 +93,25 @@ public:
         // shader Program
         ID = glCreateProgram();
         glAttachShader(ID, vertex);
-        glAttachShader(ID, fragment);
+        if (fragmentPath != nullptr)
+            glAttachShader(ID, fragment);
         if (geometryPath != nullptr)
             glAttachShader(ID, geometry);
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM");
         // delete the shaders as they're linked into our program now and no longer necessery
         glDeleteShader(vertex);
-        glDeleteShader(fragment);
+        if (fragmentPath != nullptr)
+            glDeleteShader(fragment);
         if (geometryPath != nullptr)
             glDeleteShader(geometry);
 
+    }
+    bool link()
+    {
+        glLinkProgram(ID);
+        checkCompileErrors(ID, "PROGRAM");
+        return true;
     }
     // activate the shader
     // ------------------------------------------------------------------------
