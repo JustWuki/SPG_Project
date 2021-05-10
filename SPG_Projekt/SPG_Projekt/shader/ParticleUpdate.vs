@@ -5,14 +5,14 @@ layout (location = 1) in vec3 aVelocity;
 layout (location = 2) in vec3 aColor;
 layout (location = 3) in float aLifeTime;
 layout (location = 4) in float aSize;
-layout (location = 5) in int aType;
+layout (location = 5) in float aType;
 
 out vec3 vPositionPass;
 out vec3 vVelocityPass;
 out vec3 vColorPass;
 out float vLifeTimePass;
 out float vSizePass;
-out int vTypePass;
+out float vTypePass;
 
 void main()
 {

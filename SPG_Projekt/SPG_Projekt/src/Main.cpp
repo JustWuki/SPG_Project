@@ -116,8 +116,8 @@ void SetupShaders()
 void SetupTextures()
 {
     
-    mParticleSystem.InitalizeParticleSystem();
-    mParticleSystem.mTexture = loadTexture("resource/particle.png");
+    mParticleSystem.InitializeParticleSystem();
+    mParticleSystem.mTexture = loadTexture("resource/bricks.jpg");
     
     diffuseMap = loadTexture("resource/bricks.jpg");
     normalMap = loadTexture("resource/bricks_normal.jpg");

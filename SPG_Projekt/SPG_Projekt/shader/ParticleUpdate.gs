@@ -11,67 +11,65 @@ in vec3 vVelocityPass[];
 in vec3 vColorPass[];
 in float vLifeTimePass[];
 in float vSizePass[];
-in int vTypePass[];
+in float vTypePass[];
 
 // All that we send further
-
 out vec3 vPositionOut;
 out vec3 vVelocityOut;
 out vec3 vColorOut;
 out float vLifeTimeOut;
 out float vSizeOut;
-out int vTypeOut;
+out float vTypeOut;
 
-uniform vec3 uGenPosition; // Position where new particles are spawned
-uniform vec3 uGenGravityVector; // Gravity vector for particles - updates velocity of particles 
-uniform vec3 uGenVelocityMin; // Velocity of new particle - from min to (min+range)
-uniform vec3 uGenVelocityRange;
+uniform vec3 uPosition; // Position where new particles are spawned
+uniform vec3 uGravity; // Gravity vector for particles - updates velocity of particles 
+uniform vec3 uVelocityMin; // Velocity of new particle - from min to (min+range)
+uniform vec3 uVelocityRange;
 
-uniform vec3 uGenColor;
-uniform float uGenSize; 
+uniform vec3 uColor;
+uniform float uSize; 
 
-uniform float uGenLifeMin, uGenLifeRange; // Life of new particle - from min to (min+range)
-uniform float uTimePassed; // Time passed since last frame
+uniform float uLifeTimeMin;
+uniform float uLifeTimeRange; // Life of new particle - from min to (min+range)
+uniform float uTimeStep; // Time passed since last frame
 
 uniform vec3 uRandomSeed; // Seed number for our random number function
-vec3 localSeed;
+vec3 lLocalSeed;
 
 uniform int uNumToGenerate; // How many particles will be generated next time, if greater than zero, particles are generated
 
 // This function returns random number from zero to one
 float randZeroOne()
 {
-    uint n = floatBitsToUint(localSeed.y * 214013.0 + localSeed.x * 2531011.0 + localSeed.z * 141251.0);
+    uint n = floatBitsToUint(lLocalSeed.y * 214013.0 + lLocalSeed.x * 2531011.0 + lLocalSeed.z * 141251.0);
     n = n * (n * n * 15731u + 789221u);
     n = (n >> 9u) | 0x3F800000u;
  
     float fRes =  2.0 - uintBitsToFloat(n);
-    localSeed = vec3(localSeed.x + 147158.0 * fRes, localSeed.y*fRes  + 415161.0 * fRes, localSeed.z + 324154.0*fRes);
+    lLocalSeed = vec3(lLocalSeed.x + 147158.0 * fRes, lLocalSeed.y * fRes  + 415161.0 * fRes, lLocalSeed.z + 324154.0 * fRes);
     return fRes;
 }
 
 void main()
 {
-  localSeed = uRandomSeed;
+  lLocalSeed = uRandomSeed;
   
-  // gl_Position doesn't matter now, as rendering is discarded, so I don't set it at all
-
   vPositionOut = vPositionPass[0];
   vVelocityOut = vVelocityPass[0];
   if(vTypePass[0] != 0)
   {
-    vPositionOut += vVelocityOut * uTimePassed;
+    vPositionOut += vVelocityOut * uTimeStep;
   }
   if(vTypePass[0] != 0)
   {
-    vVelocityOut += uGenGravityVector * uTimePassed;
+    vVelocityOut += uGravity * uTimeStep;
   }
 
   vColorOut = vColorPass[0];
-  vLifeTimeOut = vLifeTimePass[0] - uTimePassed;
+  vLifeTimeOut = vLifeTimePass[0] - uTimeStep;
   vSizeOut = vSizePass[0];
   vTypeOut = vTypePass[0];
-    
+
   if(vTypeOut == 0)
   {
     EmitVertex();
@@ -79,11 +77,11 @@ void main()
     
     for(int i = 0; i < uNumToGenerate; i++)
     {
-      vPositionOut = uGenPosition;
-      vVelocityOut = uGenVelocityMin + vec3(uGenVelocityRange.x*randZeroOne(), uGenVelocityRange.y*randZeroOne(), uGenVelocityRange.z*randZeroOne());
-      vColorOut = uGenColor;
-      vLifeTimeOut = uGenLifeMin + uGenLifeRange * randZeroOne();
-      vSizeOut = uGenSize;
+      vPositionOut = uPosition;
+      vVelocityOut = uVelocityMin + vec3(uVelocityRange.x * randZeroOne(), uVelocityRange.y * randZeroOne(), uVelocityRange.z * randZeroOne());
+      vColorOut = uColor;
+      vLifeTimeOut = uLifeTimeMin + uLifeTimeRange * randZeroOne();
+      vSizeOut = uSize;
       vTypeOut = 1;
       EmitVertex();
       EndPrimitive();
@@ -91,6 +89,19 @@ void main()
   }
   else if(vLifeTimeOut > 0.0)
   {
+      // Change the color of the particles depending on the remaining lifetime
+      if(vLifeTimeOut < 3.0)
+      {
+        vColorOut.x = 0;
+        vColorOut.y = 0.5;
+        vColorOut.z = 1;
+      }
+      else if(vLifeTimeOut < 4.0)
+      {
+        vColorOut.x = 0;
+        vColorOut.y = 1;
+        vColorOut.z = 0;
+      }
       EmitVertex();
       EndPrimitive(); 
   }

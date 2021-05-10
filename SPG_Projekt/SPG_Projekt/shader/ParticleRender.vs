@@ -14,7 +14,7 @@ out float vTypePass;
 void main()
 {
    gl_Position = vec4(aPosition, 1.0);
-   vColorPass = aColor;
+   vColorPass = aColor * aLifeTime;
    vSizePass = aSize;
    vLifeTimePass = aLifeTime;
 }

@@ -32,12 +32,11 @@ ParticleSystem::~ParticleSystem()
 	{
 		glDeleteVertexArrays(sBufferSize, mVaos);
 	}
-	//delete &mTexture;
 }
 
-bool ParticleSystem::InitalizeParticleSystem()
+bool ParticleSystem::InitializeParticleSystem()
 {
-	assert(!mInitalized && "Particle system already initalized!");
+	assert(!mInitialized && "Particle system already initalized!");
 
 	const char* sVaryings[] = {
 		"vPositionOut",
@@ -48,14 +47,14 @@ bool ParticleSystem::InitalizeParticleSystem()
 		"vTypeOut"
 	};
 	unsigned int varyingSize = sizeof(sVaryings) / sizeof(sVaryings[0]);
-	mParticleUpdateShader = new Shader("C:/Users/lukas/Documents/Studium_Technikum/SPG/SPG_Project/SPG_Projekt/SPG_Projekt/shader/ParticleUpdate.vs", nullptr, "C:/Users/lukas/Documents/Studium_Technikum/SPG/SPG_Project/SPG_Projekt/SPG_Projekt/shader/ParticleUpdate.gs");
-	mParticleRenderShader = new Shader("C:/Users/lukas/Documents/Studium_Technikum/SPG/SPG_Project/SPG_Projekt/SPG_Projekt/shader/ParticleRender.vs", "C:/Users/lukas/Documents/Studium_Technikum/SPG/SPG_Project/SPG_Projekt/SPG_Projekt/shader/ParticleRender.frag", "C:/Users/lukas/Documents/Studium_Technikum/SPG/SPG_Project/SPG_Projekt/SPG_Projekt/shader/ParticleRender.gs");
+	mUpdateShader = new Shader("shader/ParticleUpdate.vs", nullptr, "shader/ParticleUpdate.gs");
+	mRenderShader = new Shader("shader/ParticleRender.vs", "shader/ParticleRender.frag", "shader/ParticleRender.gs");
 
 	for (int i = 0; i < varyingSize; i++)
 	{
-		glTransformFeedbackVaryings(mParticleUpdateShader->ID, varyingSize, sVaryings, GL_INTERLEAVED_ATTRIBS);
+		glTransformFeedbackVaryings(mUpdateShader->ID, varyingSize, sVaryings, GL_INTERLEAVED_ATTRIBS);
 	}
-	mParticleUpdateShader->link();
+	mUpdateShader->link();
 
 	glGenTransformFeedbacks(1, &mTransformFeedbackBuffer);
 	glGenQueries(1, &mQuery);
@@ -101,32 +100,33 @@ float grandf(float fMin, float fAdd)
 void ParticleSystem::UpdateParticles(float timeStep)
 {
 	CheckInit();
-	mParticleUpdateShader->use();
+	mUpdateShader->use();
 
-	mParticleUpdateShader->setVec3("uGenPosition", mGenPosition);
-	mParticleUpdateShader->setVec3("uGenVelocityMin", mGenVelocityMin);
-	mParticleUpdateShader->setVec3("uGenVelocityRange", mGenVelocityRange);
-	mParticleUpdateShader->setVec3("uGenColor", mGenColor);
-	mParticleUpdateShader->setVec3("uGenGravityVector", mGenGravityVector);
+	glm::vec3 upload;
+	mUpdateShader->setVec3("uPosition", mPosition);
+	mUpdateShader->setVec3("uVelocityMin", mVelocityMin);
+	mUpdateShader->setVec3("uVelocityRange", mVelocityRange);
+	mUpdateShader->setVec3("uColor", mColor);
+	mUpdateShader->setVec3("uGravity", mGravity);
 
-	mParticleUpdateShader->setFloat("uTimeStep", timeStep);
-	mParticleUpdateShader->setFloat("uGenLifeTimeMin", mGenLifeMin);
-	mParticleUpdateShader->setFloat("uGenLifeTimeRange", mGenLifeRange);
-	mParticleUpdateShader->setFloat("uGenSize", mGenSize);
+	mUpdateShader->setFloat("uTimeStep", timeStep);
+	mUpdateShader->setFloat("uLifeTimeMin", mLifeTimeMin);
+	mUpdateShader->setFloat("uLifeTimeRange", mLifeTimeRange);
+	mUpdateShader->setFloat("uSize", mSize);
 
 	mElapsedTime += timeStep;
 
 	if (mElapsedTime > mNextGenerationTime)
 	{
-		mParticleUpdateShader->setInt("uNumToGenerate", mNumToGenerate);
+		mUpdateShader->setInt("uNumToGenerate", mNumToGenerate);
 		mElapsedTime -= mNextGenerationTime;
 
 		glm::vec3 randomSeed = glm::vec3(grandf(-10.0f, 20.0f), grandf(-10.0f, 20.0f), grandf(-10.0f, 20.0f));
-		mParticleUpdateShader->setVec3("uRandomSeed", randomSeed);
+		mUpdateShader->setVec3("uRandomSeed", randomSeed);
 	}
 	else
 	{
-		mParticleUpdateShader->setInt("uNumToGenerate", 0);
+		mUpdateShader->setInt("uNumToGenerate", 0);
 	}
 	glEnable(GL_RASTERIZER_DISCARD);
 	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, mTransformFeedbackBuffer);
@@ -161,34 +161,33 @@ void ParticleSystem::RenderParticles()
 	glEnable(GL_BLEND);
 	glDepthMask(GL_FALSE);
 
-	mParticleRenderShader->use();
+	mRenderShader->use();
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, mTexture);
-	mParticleRenderShader->setMat4("uProjection", mProjection);
-	mParticleRenderShader->setMat4("uView", mView);
-	mParticleRenderShader->setVec3("uQuad1", mQuad1);
-	mParticleRenderShader->setVec3("uQuad2", mQuad2);
+	mRenderShader->setMat4("uProjection", mProjection);
+	mRenderShader->setMat4("uView", mView);
+	mRenderShader->setVec3("uQuad1", mQuad1);
+	mRenderShader->setVec3("uQuad2", mQuad2);
 
 	glBindVertexArray(mVaos[mCurrentReadBuffer]);
 	glDisableVertexAttribArray(1);
 
 	glDrawArrays(GL_POINTS, 0, mNumParticles);
-
 	glDepthMask(GL_TRUE);
 	glDisable(GL_BLEND);
 }
 
 void ParticleSystem::SetGeneratorProperties(const glm::vec3& position, const glm::vec3& velocityMin, const glm::vec3& velocityMax, const glm::vec3& gravity, const glm::vec3 color, float minLifeTime, float maxLifeTime, float size, float spawnTime, int numToGenerate)
 {
-	mGenPosition = position;
-	mGenVelocityMin = velocityMin;
-	mGenVelocityRange = velocityMax - velocityMin;
-	mGenGravityVector = gravity;
-	mGenColor = color;
+	mPosition = position;
+	mVelocityMin = velocityMin;
+	mVelocityRange = velocityMax - velocityMin;
+	mGravity = gravity;
+	mColor = color;
 
-	mGenSize = size;
-	mGenLifeMin = minLifeTime;
-	mGenLifeRange = maxLifeTime - minLifeTime;
+	mSize = size;
+	mLifeTimeMin = minLifeTime;
+	mLifeTimeRange = maxLifeTime - minLifeTime;
 
 	mNextGenerationTime = spawnTime;
 	mElapsedTime = 0.0f;
@@ -198,10 +197,10 @@ void ParticleSystem::SetGeneratorProperties(const glm::vec3& position, const glm
 
 void ParticleSystem::SetGeneratorPosition(const glm::vec3& position)
 {
-	mGenPosition = position;
+	mPosition = position;
 }
 
-int ParticleSystem::GetNumParticles()
+int ParticleSystem::GetNumParticles() const
 {
 	return mNumParticles;
 }
@@ -218,5 +217,5 @@ void ParticleSystem::SetMatrices(const glm::mat4& projection, const glm::mat4& v
 
 void ParticleSystem::CheckInit() const
 {
-	assert(mInitalized && "Particle system not initalized before use");
+	assert(mInitialized && "Particle system not initialized before use");
 }

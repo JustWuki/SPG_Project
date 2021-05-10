@@ -11,22 +11,23 @@ public:
 	ParticleSystem();
 	~ParticleSystem();
 
-	bool InitalizeParticleSystem();
+	bool InitializeParticleSystem();
 
+	void UpdateParticles(float timeStep);
 	void RenderParticles();
-	void UpdateParticles(float fTimePassed);
 
 	void SetGeneratorProperties(const glm::vec3& position, const glm::vec3& velocityMin, const glm::vec3& velocityMax, const glm::vec3& gravity, const glm::vec3 color, float minLifeTime, float maxLifeTime, float size, float spawnTime, int numToGenerate);
 	void SetGeneratorPosition(const glm::vec3& position);
-
+	int GetNumParticles() const;
 
 	void SetMatrices(const glm::mat4& projection, const glm::mat4& viewMat, const glm::vec3& view, const glm::vec3& upVector);
 
-	int GetNumParticles();
 	unsigned int mTexture;
-	float mNextGenerationTime;
-	//CParticleSystemTransformFeedback();
 
+	float mNextGenerationTime;
+
+	Shader* mRenderShader;
+	Shader* mUpdateShader;
 private:
 	void CheckInit() const;
 
@@ -37,8 +38,6 @@ private:
 
 	unsigned int mTransformFeedbackBuffer;
 
-	//unsigned int mParticleBuffer[sBufferSize];
-	//unsigned int mVAO[sBufferSize];
 	unsigned int mVbos[sBufferSize];
 	unsigned int mVaos[sBufferSize];
 
@@ -47,23 +46,24 @@ private:
 	int mCurrentReadBuffer;
 	int mNumParticles;
 
-	glm::mat4 mProjection, mView;
-	glm::vec3 mQuad1, mQuad2;
+	glm::mat4 mProjection;
+	glm::mat4 mView;
+	glm::vec3 mQuad1;
+	glm::vec3 mQuad2;
 
 	float mElapsedTime;
 
-	glm::vec3 mGenPosition;
-	glm::vec3 mGenVelocityMin;
-	glm::vec3 mGenVelocityRange;
-	glm::vec3 mGenGravityVector;
-	glm::vec3 mGenColor;
+	glm::vec3 mPosition;
+	glm::vec3 mVelocityMin;
+	glm::vec3 mVelocityRange;
+	glm::vec3 mGravity;
+	glm::vec3 mColor;
 
-	float mGenLifeMin;
-	float mGenLifeRange;
-	float mGenSize;
+	float mLifeTimeMin;
+	float mLifeTimeRange;
+	float mSize;
 
 	int mNumToGenerate;
 
-	Shader* mParticleRenderShader;
-	Shader* mParticleUpdateShader;
+
 };
