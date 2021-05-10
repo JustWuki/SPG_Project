@@ -1,6 +1,7 @@
 #include "Main.h"
 
 #include <iostream>
+#include <random>
 
 int main(void)
 {
@@ -29,9 +30,10 @@ int main(void)
     glfwSetCursorPosCallback(mWindow, MouseCallback);
     glfwSetScrollCallback(mWindow, ScrollCallback);
     glfwSetKeyCallback(mWindow, KeyCallback);
+    glfwSetMouseButtonCallback(mWindow, MouseButtonCallBack);
 
     // Capture mouse
-    glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     // glad: load all OpenGL function pointers
     // ---------------------------------------
@@ -41,12 +43,41 @@ int main(void)
         return -1;
     }
 
+    //create random triangles in range [minValue, maxValue]
+    std::default_random_engine e1(1234);
+    std::uniform_int_distribution<int> uniform_dist(minVal, maxVal);
+
+    for (int i = 0; i < triangleAmount; i++) {
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(uniform_dist(e1), uniform_dist(e1), uniform_dist(e1)));
+        model = glm::rotate(model, (float)uniform_dist(e1), glm::vec3(1, 0, 0));
+        //model = glm::rotate(model, (float)90, glm::vec3(1, 0, 0));
+        model = glm::rotate(model, (float)uniform_dist(e1), glm::vec3(0, 1, 0));
+        model = glm::rotate(model, (float)uniform_dist(e1), glm::vec3(0, 0, 1));
+        triangles.push_back(Triangle(model));
+    }
+
+    tree = KDTree(triangles, minVal, maxVal);
+
     // to enable the changing of the point size when rendering using GL_POINTS
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_DEPTH_TEST);
 
+    // Setup Members
     mCamera.Position = glm::vec3(0, 0, -3);
     mHeight = 0;
+
+    mParticleSystem.SetGeneratorProperties(
+        glm::vec3(0.0f, 0.0f, 0.0f), // Where the particles are generated
+        glm::vec3(-20, 30, -5), // Minimal velocity
+        glm::vec3(20, 50, 5), // Maximal velocity
+        glm::vec3(0, -5, 0), // Gravity force applied to particles
+        glm::vec3(1.0f, 1.0f, 1.0f), // Color
+        4.0f, // Minimum lifetime in seconds
+        5.0f, // Maximum lifetime in seconds
+        0.5f, // Rendered size
+        0.02f, // Spawn every 0.05 seconds
+        30); // And spawn 30 particles
 
     SetupShaders();
     SetupTextures();
@@ -55,6 +86,7 @@ int main(void)
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(mWindow))
     {
+        glfwGetCursorPos(mWindow, &mouseX, &mouseY);
         DrawErrors();
 
         ProcessInput(mWindow);
@@ -77,18 +109,19 @@ void SetupShaders()
     mNoiseShader = new Shader("shader/Noise.vs", "shader/Noise.frag");
 
     mParallaxShader = new Shader("shader/Parallax.vs", "shader/Parallax.frag");
-    //mParallaxShader = new Shader("shader/ParallaxTest.vs", "shader/ParallaxTest.frag");
+
+    mTriangleShader = new Shader("shader/SimpleVertexShader.vs", "shader/SimpleColorFragmentShader.frag");
 }
 
 void SetupTextures()
 {
+    
+    mParticleSystem.InitializeParticleSystem();
+    mParticleSystem.mTexture = loadTexture("resource/bricks.jpg");
+    
     diffuseMap = loadTexture("resource/bricks.jpg");
     normalMap = loadTexture("resource/bricks_normal.jpg");
     heightMap = loadTexture("resource/bricks_disp.jpg");
-
-    /*diffuseMap = loadTexture("resource/wood.png");
-    normalMap = loadTexture("resource/toy_box_normal.png");
-    heightMap = loadTexture("resource/toy_box_disp.png");*/
 
     mParallaxShader->use();
     mParallaxShader->setInt("diffuseMap", 0);
@@ -99,6 +132,21 @@ void SetupTextures()
 // setup vao's and vbo's
 void SetupArraysAndBuffers()
 {
+    glGenVertexArrays(1, &triangleVAO);
+    glGenBuffers(1, &triangleVBO);
+    glBindVertexArray(triangleVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, triangleVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Triangle::mesh), Triangle::mesh, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(6 * sizeof(float)));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 11 * sizeof(float), (void*)(8 * sizeof(float)));
+    glBindVertexArray(0);
+
     // Framebuffer & 3D texture
     glGenTextures(1, &mFboTex);
     glBindTexture(GL_TEXTURE_3D, mFboTex);
@@ -147,8 +195,11 @@ void RenderLoop()
 
     ProcessInput(mWindow);
 
+    UpdateParticleSystem();
     // Set light uniforms
     RenderScene();
+
+    //std::cout << mParticleSystem.GetNumParticles() << std::endl;
 
     // Frame End Updates
     glfwSwapBuffers(mWindow);
@@ -163,6 +214,11 @@ void DrawErrors()
     {
         std::cerr << err << std::endl;
     }
+}
+
+void UpdateParticleSystem()
+{
+    mParticleSystem.UpdateParticles(mDeltaTime);
 }
 
 void RenderScene()
@@ -237,6 +293,43 @@ void RenderScene()
     model = glm::scale(model, glm::vec3(0.1f));
     mParallaxShader->setMat4("model", model);
     renderQuad();
+    mParticleSystem.SetMatrices(projection, view, mCamera.Front, mCamera.Up);
+    mParticleSystem.RenderParticles();
+
+    //triangles
+    mTriangleShader->use();
+    mTriangleShader->setMat4("projection", projection);
+    mTriangleShader->setMat4("view", view);
+    glBindVertexArray(triangleVAO);
+    for (auto triangle : triangles) {
+        mTriangleShader->setVec3("color", glm::vec3(0.0f, 0.0f, 1.0f));
+        mTriangleShader->setMat4("model", triangle.getModelMat());
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
+    // we test if we need to create a new raycast and if so search the tree for a hit
+    if (clickX > 0 && clickY > 0 && clickX < SCR_WIDTH && clickY < SCR_HEIGHT) {
+        //std::cout << clickX << " " << clickY << std::endl;
+        glm::vec3 ray = CreateRay(projection, view);
+        //std::cout << ray.x << " " << ray.y << " " << ray.z << std::endl;
+
+        float camPos[3] = { mCamera.Position.x, mCamera.Position.y, mCamera.Position.z };
+        //float camPos[3] = { cameraPos.x, cameraPos.y, cameraPos.z };
+        float rayDir[3] = { ray.x, ray.y, ray.z };
+
+        Triangle* result = tree.searchHit(camPos, rayDir, 100);
+        if (result != nullptr) {
+            lastResult = result;
+        }
+
+        clickX = -10;
+        clickY = -10;
+        std::cout << tree.lastPoint.x << " " << tree.lastPoint.y << " " << tree.lastPoint.z << std::endl;
+    }
+
+    if (tree.lastPoint.x != 0 && tree.lastPoint.y != 0 && tree.lastPoint.z != 0) {
+        mParticleSystem.SetGeneratorPosition(tree.lastPoint);
+    }
 }
 
 /// <summary>
@@ -309,6 +402,15 @@ void ProcessInput(GLFWwindow* window)
     {
         mRefinementSteps = std::max(--mRefinementSteps, 1);
     }
+    // Particle System
+    if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
+    {
+        mParticleSystem.mNextGenerationTime += delta;
+    }
+    if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+    {
+        mParticleSystem.mNextGenerationTime = std::max(mParticleSystem.mNextGenerationTime - delta, 0.01f);
+    }
 }
 
 // GLFW Callback when mouse moves
@@ -350,6 +452,34 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods
     {
         mShowWireFrame = !mShowWireFrame;
     }
+}
+
+void MouseButtonCallBack(GLFWwindow* window, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        clickX = mouseX;
+        clickY = mouseY;
+    }
+}
+
+glm::vec3 CreateRay(const glm::mat4& projection, const glm::mat4& view) {
+    float x = (2.0f * clickX) / SCR_WIDTH - 1.0f;
+    float y = 1.0f - (2.0f * clickY) / SCR_HEIGHT;
+    float z = 1.0f;
+    glm::vec3 ray_nds = glm::vec3(x, y, z);
+
+    glm::vec4 ray_clip = glm::vec4(ray_nds.x, ray_nds.y, -1.0, 1.0);
+
+    glm::vec4 ray_eye = glm::inverse(projection) * ray_clip;
+
+    ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1.0, 0.0);
+
+    glm::vec4 result = (glm::inverse(view) * ray_eye);
+    glm::vec3 ray_wor = glm::vec3(result.x, result.y, result.z);
+    // don't forget to normalise the vector at some point
+    ray_wor = glm::normalize(ray_wor);
+    return ray_wor;
 }
 
 /// <summary>

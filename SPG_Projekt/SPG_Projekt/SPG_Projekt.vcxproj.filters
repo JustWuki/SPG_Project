@@ -27,6 +27,15 @@
     <ClCompile Include="src\Utils\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\Utils\Collision_Detection\KDTree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\Particles\ParticleSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Utils\Collision_Detection\Triangle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Main.h">
@@ -47,6 +56,24 @@
     <ClInclude Include="src\Utils\HelperObjects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Utils\Collision_Detection\Box.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\Collision_Detection\KDTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\Collision_Detection\Node.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\Particles\Particle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\Particles\ParticleSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Utils\Collision_Detection\Triangle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shader\Vertex.vs" />
@@ -56,6 +83,13 @@
     <None Include="shader\Noise.vs" />
     <None Include="shader\Parallax.vs" />
     <None Include="shader\Parallax.frag" />
+    <None Include="shader\ParticleRender.frag" />
+    <None Include="shader\ParticleRender.gs" />
+    <None Include="shader\ParticleRender.vs" />
+    <None Include="shader\ParticleUpdate.vs" />
+    <None Include="shader\ParticleUpdate.gs" />
+    <None Include="shader\SimpleVertexShader.vs" />
+    <None Include="shader\SimpleColorFragmentShader.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resource\bricks.jpg">
@@ -65,6 +99,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="resource\bricks_normal.jpg">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\particle.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

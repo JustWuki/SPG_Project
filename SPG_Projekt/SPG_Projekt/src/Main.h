@@ -12,12 +12,16 @@
 #include "Utils/Shader.h"
 #include "Utils/TextureLoader.h"
 #include "Utils/HelperObjects.h"
+#include "Utils/Particles/ParticleSystem.h"
+#include "Utils/Collision_Detection/KDTree.h"
+#include "Utils/Collision_Detection/Triangle.h"
 
 void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 void MouseCallback(GLFWwindow* window, double xpos, double ypos);
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void ProcessInput(GLFWwindow* window);
+void MouseButtonCallBack(GLFWwindow* window, int button, int action, int mods);
 
 void RenderLoop();
 void DrawErrors();
@@ -27,6 +31,10 @@ void SetupArraysAndBuffers();
 void RenderLoop();
 void RenderScene();
 void OnExit();
+
+void UpdateParticleSystem();
+
+glm::vec3 CreateRay(const glm::mat4& projection, const glm::mat4& view);
 
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
@@ -48,6 +56,7 @@ double mLastFrameTime;
 Shader* mNoiseShader;
 Shader* mShader;
 Shader* mParallaxShader;
+Shader* mTriangleShader;
 
 // Textures
 unsigned int diffuseMap;
@@ -75,3 +84,25 @@ float heightScale = 0.1;
 // lighting info
 glm::vec3 lightPos(-5.0f, 1.0f, 0.3f);
 glm::vec3 startPos(-5.0f, 0.0f, 0.0f);
+
+ParticleSystem mParticleSystem;
+
+//kd tree vars
+int triangleAmount = 40;
+int maxVal = 10;
+int minVal = -maxVal;
+std::vector<Triangle> triangles;
+KDTree tree;
+Triangle* lastResult;
+
+unsigned int triangleVAO;
+unsigned int triangleVBO;
+unsigned int pointVAO;
+unsigned int pointVBO;
+float point[3] = { 0.0f, 0.0f,  0.0f };
+unsigned int wireCubeVAO;
+unsigned int wireCubeVBO;
+
+//mouse values
+double mouseX, mouseY;
+double clickX = -10, clickY = -10;
