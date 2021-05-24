@@ -173,6 +173,10 @@
     <ClInclude Include="src\Utils\TextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shader\Depth.frag" />
+    <None Include="shader\Depth.vs" />
+    <None Include="shader\DepthQuad.frag" />
+    <None Include="shader\DepthQuad.vs" />
     <None Include="shader\Fragment.frag" />
     <None Include="shader\Geometry.gs" />
     <None Include="shader\Parallax.frag" />
@@ -184,6 +188,8 @@
     <None Include="shader\ParticleUpdate.vs" />
     <None Include="shader\SimpleColorFragmentShader.frag" />
     <None Include="shader\SimpleVertexShader.vs" />
+    <None Include="shader\SoftShadowShader.frag" />
+    <None Include="shader\SoftShadowShader.vs" />
     <None Include="shader\Vertex.vs" />
     <None Include="shader\Noise.frag" />
     <None Include="shader\Noise.vs" />

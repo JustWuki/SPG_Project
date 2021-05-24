@@ -33,11 +33,15 @@ void RenderScene();
 void OnExit();
 
 void UpdateParticleSystem();
+void DepthMapConfig();
 
 glm::vec3 CreateRay(const glm::mat4& projection, const glm::mat4& view);
 
 const unsigned int SCR_WIDTH = 1920;
 const unsigned int SCR_HEIGHT = 1080;
+
+const unsigned int SHADOW_WIDTH = 1024;
+const unsigned int SHADOW_HEIGHT = 1024;
 
 const unsigned int TERRAIN_WIDTH =  64;
 const unsigned int TERRAIN_HEIGHT = 64;
@@ -57,6 +61,9 @@ Shader* mNoiseShader;
 Shader* mShader;
 Shader* mParallaxShader;
 Shader* mTriangleShader;
+Shader* mDepthShader;
+Shader* mSoftShadowShader;
+Shader* mDepthQuadShader;
 
 // Textures
 unsigned int diffuseMap;
@@ -82,15 +89,17 @@ float mShowWireFrame = false;
 
 float heightScale = 0.1;
 // lighting info
-glm::vec3 lightPos(-5.0f, 1.0f, 0.3f);
+glm::vec3 lightPos(-5.0f, 1.0f, 4.0f);
 glm::vec3 startPos(-5.0f, 0.0f, 0.0f);
+
+glm::vec3 lightPosShadows(.1f, 5.0f, .0f);
 
 ParticleSystem mParticleSystem;
 
 //kd tree vars
 int triangleAmount = 40;
-int maxVal = 10;
-int minVal = -maxVal;
+int maxVal = 20;
+int minVal = 10;
 std::vector<Triangle> triangles;
 KDTree tree;
 Triangle* lastResult;
@@ -106,3 +115,7 @@ unsigned int wireCubeVBO;
 //mouse values
 double mouseX, mouseY;
 double clickX = -10, clickY = -10;
+
+// depth info for shadowmapping
+unsigned int depthMap;
+unsigned int depthMapFBO;

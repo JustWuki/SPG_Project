@@ -90,6 +90,12 @@
     <None Include="shader\ParticleUpdate.gs" />
     <None Include="shader\SimpleVertexShader.vs" />
     <None Include="shader\SimpleColorFragmentShader.frag" />
+    <None Include="shader\Depth.vs" />
+    <None Include="shader\Depth.frag" />
+    <None Include="shader\SoftShadowShader.vs" />
+    <None Include="shader\SoftShadowShader.frag" />
+    <None Include="shader\DepthQuad.vs" />
+    <None Include="shader\DepthQuad.frag" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resource\bricks.jpg">

@@ -82,6 +82,7 @@ int main(void)
     SetupShaders();
     SetupTextures();
     SetupArraysAndBuffers();
+    DepthMapConfig();
 
     // Loop until the user closes the window
     while (!glfwWindowShouldClose(mWindow))
@@ -111,6 +112,10 @@ void SetupShaders()
     mParallaxShader = new Shader("shader/Parallax.vs", "shader/Parallax.frag");
 
     mTriangleShader = new Shader("shader/SimpleVertexShader.vs", "shader/SimpleColorFragmentShader.frag");
+
+    mDepthShader = new Shader("shader/Depth.vs", "shader/Depth.frag");
+
+    mSoftShadowShader = new Shader("shader/SoftShadowShader.vs", "shader/SoftShadowShader.frag");
 }
 
 void SetupTextures()
@@ -127,6 +132,10 @@ void SetupTextures()
     mParallaxShader->setInt("diffuseMap", 0);
     mParallaxShader->setInt("normalMap", 1);
     mParallaxShader->setInt("depthMap", 2);
+
+    mSoftShadowShader->use();
+    mSoftShadowShader->setInt("diffuseTexture", 0);
+    mSoftShadowShader->setInt("shadowMap", 1);
 }
 
 // setup vao's and vbo's
@@ -221,8 +230,100 @@ void UpdateParticleSystem()
     mParticleSystem.UpdateParticles(mDeltaTime);
 }
 
+void DepthMapConfig() {
+    glGenFramebuffers(1, &depthMapFBO);
+    // create depth texture
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+    // attach depth texture as FBO's depth buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void RenderScene()
 {
+    glm::mat4 projection = glm::perspective(glm::radians(mCamera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    glm::mat4 view = mCamera.GetViewMatrix();
+    glm::mat4 model = glm::mat4(1.0f);
+
+    // render scene from shadows perspective for shadow map
+    glm::mat4 lightProjection, lightView;
+    glm::mat4 lightSpaceMatrix;
+    float near_plane = 0.1f, far_plane = 100.0f;
+    lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+    lightView = glm::lookAt(lightPosShadows, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0, 1.0, 0.0));
+    lightSpaceMatrix = lightProjection * lightView;
+    // render scene from light's point of view
+    mDepthShader->use();
+    mDepthShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glCullFace(GL_FRONT);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, diffuseMap);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    mDepthShader->setMat4("model", model);
+    renderCube();
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(3.0f, 0.0f, 0.0f));
+    mDepthShader->setMat4("model", model);
+    renderCube();
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-3.0f, 0.0f, 0.0f));
+    mDepthShader->setMat4("model", model);
+    renderCube();
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f));
+    mDepthShader->setMat4("model", model);
+    renderPlane();
+    glCullFace(GL_BACK);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // render objects normally with generated shadow map
+    mSoftShadowShader->use();
+    mSoftShadowShader->setMat4("projection", projection);
+    mSoftShadowShader->setMat4("view", view);
+    // set light uniforms
+    mSoftShadowShader->setVec3("viewPos", mCamera.Position);
+    mSoftShadowShader->setVec3("lightPos", lightPosShadows);
+    mSoftShadowShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, diffuseMap);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    mSoftShadowShader->setMat4("model", model);
+    renderCube();
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(3.0f, 0.0f, 0.0f));
+    mSoftShadowShader->setMat4("model", model);
+    renderCube();
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-3.0f, 0.0f, 0.0f));
+    mSoftShadowShader->setMat4("model", model);
+    renderCube();
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, -5.0f, 0.0f));
+    mSoftShadowShader->setMat4("model", model);
+    renderPlane();
+
+    // render terrain
     glViewport(0, 0, TERRAIN_WIDTH, TERRAIN_HEIGHT);
     mNoiseShader->use();
     glBindFramebuffer(GL_FRAMEBUFFER, mFbo);
@@ -240,13 +341,11 @@ void RenderScene()
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    /*glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);*/
 
     mShader->use();
-    glm::mat4 projection = glm::perspective(glm::radians(mCamera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    glm::mat4 view = mCamera.GetViewMatrix();
-    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::mat4(1.0f);
     model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
     mShader->setMat4("proj", projection);
     mShader->setMat4("view", view);
@@ -287,14 +386,18 @@ void RenderScene()
     glBindTexture(GL_TEXTURE_2D, heightMap);
     renderQuad();
 
+   /* model = glm::mat4(1.0f);
+    model = glm::translate(model, lightPos + glm::vec3(0.0, 0.0, -1.0));
+    model = glm::scale(model, glm::vec3(0.2f));
+    mParallaxShader->setMat4("model", model);
+    renderQuad();*/
+
     //render light source (simply re-renders a smaller plane at the light's position for debugging/visualization)
     model = glm::mat4(1.0f);
     model = glm::translate(model, lightPos);
     model = glm::scale(model, glm::vec3(0.1f));
     mParallaxShader->setMat4("model", model);
     renderQuad();
-    mParticleSystem.SetMatrices(projection, view, mCamera.Front, mCamera.Up);
-    mParticleSystem.RenderParticles();
 
     //triangles
     mTriangleShader->use();
@@ -306,6 +409,10 @@ void RenderScene()
         mTriangleShader->setMat4("model", triangle.getModelMat());
         glDrawArrays(GL_TRIANGLES, 0, 3);
     }
+
+    // set matrices for particle system and render particles
+    mParticleSystem.SetMatrices(projection, view, mCamera.Front, mCamera.Up);
+    mParticleSystem.RenderParticles();
 
     // we test if we need to create a new raycast and if so search the tree for a hit
     if (clickX > 0 && clickY > 0 && clickX < SCR_WIDTH && clickY < SCR_HEIGHT) {
