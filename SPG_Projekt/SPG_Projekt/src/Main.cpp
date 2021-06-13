@@ -62,6 +62,9 @@ int main(void)
     // to enable the changing of the point size when rendering using GL_POINTS
     glEnable(GL_PROGRAM_POINT_SIZE);
     glEnable(GL_DEPTH_TEST);
+    //activate blending for text
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // Setup Members
     mCamera.Position = glm::vec3(0, 0, -3);
@@ -116,6 +119,9 @@ void SetupShaders()
     mDepthShader = new Shader("shader/Depth.vs", "shader/Depth.frag");
 
     mSoftShadowShader = new Shader("shader/SoftShadowShader.vs", "shader/SoftShadowShader.frag");
+
+    mTextRenderer = new TextRenderer(SCR_WIDTH, SCR_HEIGHT);
+    mTextRenderer->Load("fonts/Consolas.ttf", 36);
 }
 
 void SetupTextures()
@@ -208,7 +214,9 @@ void RenderLoop()
     // Set light uniforms
     RenderScene();
 
-    //std::cout << mParticleSystem.GetNumParticles() << std::endl;
+    // Text HUD
+    RenderText(mDeltaTime);
+
 
     // Frame End Updates
     glfwSwapBuffers(mWindow);
@@ -223,6 +231,26 @@ void DrawErrors()
     {
         std::cerr << err << std::endl;
     }
+}
+
+void RenderText(double delta) 
+{
+    float xOff = 10.0f;
+    float yOff = .0f;
+    float dY = 20.0f;
+
+    // assure that GL_BLEND is active and polygon mode is set to full
+    bool activateBlend = !glIsEnabled(GL_BLEND);
+    if (activateBlend) glEnable(GL_BLEND);
+
+    // set wireframe mode
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+    yOff = .0f;
+    mTextRenderer->RenderText(std::to_string(1.0f / delta), SCR_WIDTH - 180.0f, yOff += dY, 0.8f, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    if (activateBlend) glDisable(GL_BLEND);
+    glPolygonMode(GL_FRONT_AND_BACK, (mShowWireFrame) ? GL_LINE : GL_FILL);
 }
 
 void UpdateParticleSystem()
@@ -442,7 +470,6 @@ void RenderScene()
 /// <summary>
 /// Callback functions
 /// </summary>
-
 
 // Process input
 void ProcessInput(GLFWwindow* window)

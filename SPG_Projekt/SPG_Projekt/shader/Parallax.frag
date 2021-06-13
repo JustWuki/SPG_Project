@@ -12,10 +12,13 @@ in VS_OUT {
 uniform sampler2D diffuseMap;
 uniform sampler2D normalMap;
 uniform sampler2D depthMap;
+uniform sampler2D shadowMap;
 
 uniform float heightScale;
 uniform int normalSteps;
 uniform int refinementSteps;
+
+int shadowSize = 1024;
 
 vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
 { 

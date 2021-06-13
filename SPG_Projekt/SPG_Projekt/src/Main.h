@@ -10,6 +10,7 @@
 
 #include "Utils/Camera.h"
 #include "Utils/Shader.h"
+#include "Utils/TextRenderer.h"
 #include "Utils/TextureLoader.h"
 #include "Utils/HelperObjects.h"
 #include "Utils/Particles/ParticleSystem.h"
@@ -25,6 +26,7 @@ void MouseButtonCallBack(GLFWwindow* window, int button, int action, int mods);
 
 void RenderLoop();
 void DrawErrors();
+void RenderText(double delta);
 void SetupShaders();
 void SetupTextures();
 void SetupArraysAndBuffers();
@@ -55,6 +57,8 @@ bool mFirstMouse;
 GLFWwindow* mWindow;
 double mDeltaTime;
 double mLastFrameTime;
+
+TextRenderer* mTextRenderer;
 
 // shaders
 Shader* mNoiseShader;
