@@ -46,10 +46,11 @@ int main(void)
     //create random triangles in range [minValue, maxValue]
     std::default_random_engine e1(1234);
     std::uniform_int_distribution<int> uniform_dist(minVal, maxVal);
+    std::uniform_int_distribution<int> uniform_dist2(-20, -5);
 
     for (int i = 0; i < triangleAmount; i++) {
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(uniform_dist(e1), uniform_dist(e1), uniform_dist(e1)));
+        model = glm::translate(model, glm::vec3(uniform_dist2(e1), uniform_dist(e1), uniform_dist(e1)));
         model = glm::rotate(model, (float)uniform_dist(e1), glm::vec3(1, 0, 0));
         //model = glm::rotate(model, (float)90, glm::vec3(1, 0, 0));
         model = glm::rotate(model, (float)uniform_dist(e1), glm::vec3(0, 1, 0));
@@ -66,12 +67,16 @@ int main(void)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    GLint MaxPatchVertices = 0;
+    glGetIntegerv(GL_MAX_PATCH_VERTICES, &MaxPatchVertices);
+    printf("Max supported patch vertices %d\n", MaxPatchVertices); // 32
+
     // Setup Members
     mCamera.Position = glm::vec3(0, 0, -3);
     mHeight = 0;
 
     mParticleSystem.SetGeneratorProperties(
-        glm::vec3(0.0f, 0.0f, 0.0f), // Where the particles are generated
+        glm::vec3(0.0f, 0.0f, -5.0f), // Where the particles are generated
         glm::vec3(-20, 30, -5), // Minimal velocity
         glm::vec3(20, 50, 5), // Maximal velocity
         glm::vec3(0, -5, 0), // Gravity force applied to particles
@@ -119,6 +124,8 @@ void SetupShaders()
     mDepthShader = new Shader("shader/Depth.vs", "shader/Depth.frag");
 
     mSoftShadowShader = new Shader("shader/SoftShadowShader.vs", "shader/SoftShadowShader.frag");
+
+    mTesselationShader = new Shader("shader/Tesselation.vs", "shader/Tesselation.frag", nullptr, "shader/Tesselation.tesc", "shader/Tesselation.tese");
 
     mTextRenderer = new TextRenderer(SCR_WIDTH, SCR_HEIGHT);
     mTextRenderer->Load("fonts/Consolas.ttf", 36);
@@ -217,7 +224,6 @@ void RenderLoop()
     // Text HUD
     RenderText(mDeltaTime);
 
-
     // Frame End Updates
     glfwSwapBuffers(mWindow);
     glfwPollEvents();
@@ -302,15 +308,15 @@ void RenderScene()
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, diffuseMap);
     model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, -5.0f));
     mDepthShader->setMat4("model", model);
     renderCube();
     model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(3.0f, 0.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(3.0f, 0.0f, -5.0f));
     mDepthShader->setMat4("model", model);
     renderCube();
     model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-3.0f, 0.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(-3.0f, 0.0f, -5.0f));
     mDepthShader->setMat4("model", model);
     renderCube();
     model = glm::mat4(1.0f);
@@ -335,15 +341,15 @@ void RenderScene()
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, depthMap);
     model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, -5.0f));
     mSoftShadowShader->setMat4("model", model);
     renderCube();
     model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(3.0f, 0.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(3.0f, 0.0f, -5.0f));
     mSoftShadowShader->setMat4("model", model);
     renderCube();
     model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-3.0f, 0.0f, 0.0f));
+    model = glm::translate(model, glm::vec3(-3.0f, 0.0f, -5.0f));
     mSoftShadowShader->setMat4("model", model);
     renderCube();
     model = glm::mat4(1.0f);
@@ -374,7 +380,7 @@ void RenderScene()
 
     mShader->use();
     model = glm::mat4(1.0f);
-    model = glm::scale(model, glm::vec3(0.1f, 0.1f, 0.1f));
+    //model = glm::scale(model, glm::vec3(0.1f));
     mShader->setMat4("proj", projection);
     mShader->setMat4("view", view);
     mShader->setMat4("model", model);
@@ -426,6 +432,19 @@ void RenderScene()
     model = glm::scale(model, glm::vec3(0.1f));
     mParallaxShader->setMat4("model", model);
     renderQuad();
+
+    mTesselationShader->use();
+    mTesselationShader->setMat4("projection", projection);
+    mTesselationShader->setMat4("view", view);
+    model = glm::mat4(1.0f);
+    glm::mat4 transform = glm::translate(model, glm::vec3(0.0f, 7.0f, -12.0f));
+    mTesselationShader->setMat4("model", glm::scale(transform, glm::vec3(5)));
+    mTesselationShader->setFloat("tessellation_factor", mTesselationFactor);
+    glBindVertexArray(quadVAO);
+    glPatchParameteri(GL_PATCH_VERTICES, 3);
+    glDrawArrays(GL_PATCHES, 0, 6);
+    glBindVertexArray(0);
+    //renderQuad();
 
     //triangles
     mTriangleShader->use();
@@ -535,6 +554,15 @@ void ProcessInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_T) == GLFW_PRESS)
     {
         mRefinementSteps = std::max(--mRefinementSteps, 1);
+    }
+    // tesselation
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+    {
+        ++mTesselationFactor;
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+    {
+        mTesselationFactor = std::max(mTesselationFactor - 1.0f, 1.0f);
     }
     // Particle System
     if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)

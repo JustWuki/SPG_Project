@@ -68,6 +68,7 @@ Shader* mTriangleShader;
 Shader* mDepthShader;
 Shader* mSoftShadowShader;
 Shader* mDepthQuadShader;
+Shader* mTesselationShader;
 
 // Textures
 unsigned int diffuseMap;
@@ -102,8 +103,8 @@ ParticleSystem mParticleSystem;
 
 //kd tree vars
 int triangleAmount = 40;
-int maxVal = 20;
-int minVal = 10;
+int maxVal = 10;
+int minVal = 0;
 std::vector<Triangle> triangles;
 KDTree tree;
 Triangle* lastResult;
@@ -123,3 +124,6 @@ double clickX = -10, clickY = -10;
 // depth info for shadowmapping
 unsigned int depthMap;
 unsigned int depthMapFBO;
+
+// tesselation
+float mTesselationFactor = 5.0;

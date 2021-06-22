@@ -191,6 +191,11 @@
     <None Include="shader\SimpleVertexShader.vs" />
     <None Include="shader\SoftShadowShader.frag" />
     <None Include="shader\SoftShadowShader.vs" />
+    <None Include="shader\Tesselation.frag" />
+    <None Include="shader\Tesselation.gs" />
+    <None Include="shader\Tesselation.tesc" />
+    <None Include="shader\Tesselation.tese" />
+    <None Include="shader\Tesselation.vs" />
     <None Include="shader\Text.frag" />
     <None Include="shader\Text.vs" />
     <None Include="shader\Vertex.vs" />

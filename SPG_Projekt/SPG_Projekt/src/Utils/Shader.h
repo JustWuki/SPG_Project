@@ -16,19 +16,25 @@ public:
 
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
-    Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr)
+    Shader(const char* vertexPath, const char* fragmentPath, const char* geometryPath = nullptr, const char* tesselationControlPath = nullptr, const char* tesselationEvaluationPath = nullptr)
     {
         // 1. retrieve the vertex/fragment source code from filePath
         std::string vertexCode;
         std::string fragmentCode;
         std::string geometryCode;
+        std::string tescCode;
+        std::string teseCode;
         std::ifstream vShaderFile;
         std::ifstream fShaderFile;
         std::ifstream gShaderFile;
+        std::ifstream tescShaderFile;
+        std::ifstream teseShaderFile;
         // ensure ifstream objects can throw exceptions:
         vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         fShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         gShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        tescShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        teseShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         try
         {
             // open files
@@ -57,6 +63,24 @@ public:
                 gShaderStream << gShaderFile.rdbuf();
                 gShaderFile.close();
                 geometryCode = gShaderStream.str();
+            }
+
+            if (tesselationControlPath != nullptr)
+            {
+                tescShaderFile.open(tesselationControlPath);
+                std::stringstream tescShaderStream;
+                tescShaderStream << tescShaderFile.rdbuf();
+                tescShaderFile.close();
+                tescCode = tescShaderStream.str();
+            }
+
+            if (tesselationEvaluationPath != nullptr)
+            {
+                teseShaderFile.open(tesselationEvaluationPath);
+                std::stringstream teseShaderStream;
+                teseShaderStream << teseShaderFile.rdbuf();
+                teseShaderFile.close();
+                teseCode = teseShaderStream.str();
             }
         }
         catch (std::ifstream::failure& e)
@@ -90,6 +114,24 @@ public:
             glCompileShader(geometry);
             checkCompileErrors(geometry, "GEOMETRY");
         }
+        unsigned int tesc;
+        if (tesselationControlPath != nullptr)
+        {
+            const char* tescShaderCode = tescCode.c_str();
+            tesc = glCreateShader(GL_TESS_CONTROL_SHADER);
+            glShaderSource(tesc, 1, &tescShaderCode, NULL);
+            glCompileShader(tesc);
+            checkCompileErrors(tesc, "TESS_CONTROL");
+        }
+        unsigned int tese;
+        if (tesselationEvaluationPath != nullptr)
+        {
+            const char* teseShaderCode = teseCode.c_str();
+            tese = glCreateShader(GL_TESS_EVALUATION_SHADER);
+            glShaderSource(tese, 1, &teseShaderCode, NULL);
+            glCompileShader(tese);
+            checkCompileErrors(tese, "TESS_EVAL");
+        }
         // shader Program
         ID = glCreateProgram();
         glAttachShader(ID, vertex);
@@ -97,6 +139,10 @@ public:
             glAttachShader(ID, fragment);
         if (geometryPath != nullptr)
             glAttachShader(ID, geometry);
+        if (tesselationControlPath != nullptr)
+            glAttachShader(ID, tesc);
+        if (tesselationEvaluationPath != nullptr)
+            glAttachShader(ID, tese);
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM");
         // delete the shaders as they're linked into our program now and no longer necessery
@@ -105,6 +151,10 @@ public:
             glDeleteShader(fragment);
         if (geometryPath != nullptr)
             glDeleteShader(geometry);
+        if (tesselationControlPath != nullptr)
+            glDeleteShader(tesc);
+        if (tesselationEvaluationPath != nullptr)
+            glDeleteShader(tese);
 
     }
     bool link()
