@@ -126,4 +126,4 @@ unsigned int depthMap;
 unsigned int depthMapFBO;
 
 // tesselation
-float mTesselationFactor = 5.0;
+float mTesselationFactor = 5.0f;

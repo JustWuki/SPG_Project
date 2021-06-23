@@ -29,6 +29,7 @@ float blur(vec2 fragCoord, float c)
     vec2 Radius = vec2(Size/shadowSize);
     
     // Pixel colour
+    // this equals the closest depth from lights perspective
     float Color = texture(shadowMap, fragCoord).r;
     
     // Blur calculations
@@ -48,13 +49,12 @@ float blur(vec2 fragCoord, float c)
 
 float ShadowCalculation(vec4 fragPosLightSpace, vec3 normal, vec3 lightDir)
 {
+    //transform proj cords to lightspace
 	vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
 	projCoords = projCoords * 0.5 + 0.5;
-	float closestDepth = texture(shadowMap, projCoords.xy).r;
 	float currentDepth = projCoords.z;
-	float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.007);
-	//float bias = 0.007;
 	float c = 30;
+    //blur and then use exponential formula to approximate depth test by exponential term
 	float blurredExpZ = blur(projCoords.xy, c);
 	float shadow = clamp(1 - exp(-c*currentDepth)*blurredExpZ, 0, 1);
 	return shadow;

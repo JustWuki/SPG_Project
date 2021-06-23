@@ -52,11 +52,13 @@ bool ParticleSystem::InitializeParticleSystem()
 
 	for (int i = 0; i < varyingSize; i++)
 	{
+		// saves particle attributes to single buffer
 		glTransformFeedbackVaryings(mUpdateShader->ID, varyingSize, sVaryings, GL_INTERLEAVED_ATTRIBS);
 	}
 	mUpdateShader->link();
 
 	glGenTransformFeedbacks(1, &mTransformFeedbackBuffer);
+	// query checks how many particles have been emitted
 	glGenQueries(1, &mQuery);
 
 	glGenBuffers(sBufferSize, mVbos);
@@ -70,6 +72,7 @@ bool ParticleSystem::InitializeParticleSystem()
 		glBindVertexArray(mVaos[i]);
 		glBindBuffer(GL_ARRAY_BUFFER, mVbos[i]);
 		glBufferData(GL_ARRAY_BUFFER, sizeof(Particle) * sMaxParticles, nullptr, GL_DYNAMIC_DRAW);
+		// add the generator particle
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Particle), &initParticle);
 
 		for (unsigned int j = 0; j < varyingSize; j++)
@@ -128,15 +131,19 @@ void ParticleSystem::UpdateParticles(float timeStep)
 	{
 		mUpdateShader->setInt("uNumToGenerate", 0);
 	}
+	//disable rasterization - no graphic output
 	glEnable(GL_RASTERIZER_DISCARD);
+	//use the previously created buffer
 	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, mTransformFeedbackBuffer);
 
+	//bind current read buffer
 	glBindVertexArray(mVaos[mCurrentReadBuffer]);
-	glEnableVertexAttribArray(1);
+	glEnableVertexAttribArray(1); //re enable velocity
 
-	// 1 -  use other buffer
+	// 1 -  use other buffer to save info
 	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, mVbos[1 - mCurrentReadBuffer]);
 
+	// check how many primitives output
 	glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, mQuery);
 	glBeginTransformFeedback(GL_POINTS);
 

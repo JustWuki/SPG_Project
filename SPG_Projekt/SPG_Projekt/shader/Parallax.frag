@@ -55,7 +55,7 @@ vec2 ParallaxMapping(vec2 texCoords, vec3 viewDir)
     while (currentLayerDepth >= currentDepthMapValue)
     {
         // shift texture coordinates along direction of P
-        currentTexCoords -= deltaTexCoords;
+        currentTexCoords += deltaTexCoords;
         // get depthmap value at current texture coordinates
         currentDepthMapValue = texture(depthMap, currentTexCoords).r;
         // get depth of next layer
